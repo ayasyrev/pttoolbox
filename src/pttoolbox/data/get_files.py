@@ -1,11 +1,9 @@
 from pathlib import Path, PosixPath
 from typing import List, Optional, Union
 
+from .typing import PathOrStr
 
 IMG_EXT = (".JPEG", ".JPG", ".jpeg", ".jpg", ".PNG", ".png")
-
-
-PathOrStr = Union[str, PosixPath, Path]
 
 
 def get_files(
