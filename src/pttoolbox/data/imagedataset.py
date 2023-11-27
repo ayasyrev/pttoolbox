@@ -76,10 +76,10 @@ class ImageDataset(VisionDataset):
         target_transform: Optional[Callable] = None,
         loader: Optional[Callable] = None,
         image_backend: str = "accimage",
-        limit_dataset: int = 0,
+        num_samples: int = 0,
         classes_as_imagenet: bool = True,
     ):
-        filenames = get_files(root, num_samples=limit_dataset)
+        filenames = get_files(root, num_samples=num_samples)
         samples = tuple((str(fn), synset2target[fn.parent.name]) for fn in filenames)
         return cls(
             root=root,
@@ -102,7 +102,7 @@ class ImageDataset(VisionDataset):
         target_transform: Optional[Callable] = None,
         loader: Optional[Callable] = None,
         image_backend: str = "accimage",
-        limit_dataset: int = 0,
+        num_samples: int = 0,
         classes_as_imagenet: bool = False,
     ):
         if classes_as_imagenet:
@@ -116,8 +116,8 @@ class ImageDataset(VisionDataset):
         df["path"] = root / df.ds / df.split / df.synsetid / df.filename
         df["path"] = df.path.apply(str)
         samples = tuple(zip(df.path, df.target))
-        if limit_dataset:
-            samples = samples[:limit_dataset]
+        if num_samples:
+            samples = samples[:num_samples]
         return cls(
             root=root,
             samples=samples,
