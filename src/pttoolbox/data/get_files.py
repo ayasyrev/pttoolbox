@@ -1,5 +1,5 @@
-from pathlib import Path, PosixPath
-from typing import List, Optional, Union
+from pathlib import Path
+from typing import List, Optional
 
 from .typing import PathOrStr
 
