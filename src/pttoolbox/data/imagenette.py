@@ -1,4 +1,5 @@
 """Create ImageDataset for Imagenette2 / Imagewoof2."""
+import os
 from importlib import resources
 from typing import Callable, Literal, Optional
 
@@ -66,6 +67,7 @@ def get_imagenette_dataloader(
     loader: Optional[Callable] = None,
     image_backend: str = "accimage",
     classes_as_imagenet: bool = False,
+    num_workers: Optional[int] = None,
     **kwargs,
 ) -> DataLoader:
     """Create DataLoader for Imagenette2 / Imagewoof2."""
@@ -87,6 +89,13 @@ def get_imagenette_dataloader(
     else:
         shuffle = False
         drop_last = False
+    if num_workers is None:
+        num_workers = os.cpu_count()
     return DataLoader(
-        dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last, **kwargs
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        drop_last=drop_last,
+        num_workers=num_workers,
+        **kwargs,
     )
