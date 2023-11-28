@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from .typing import PathOrStr
+from ..typing import PathOrStr
 
 IMG_EXT = (".JPEG", ".JPG", ".jpeg", ".jpg", ".PNG", ".png")
 

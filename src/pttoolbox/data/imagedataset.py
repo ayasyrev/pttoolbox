@@ -11,13 +11,14 @@ from torchvision.datasets.folder import default_loader
 from torchvision.datasets.vision import VisionDataset
 from torchvision.transforms._presets import ImageClassification
 
+from ..typing import PathOrStr
 from .get_files import get_files
 from .imagenet1k_classes import SYNSET2TARGET, synset2target
-from .typing import PathOrStr
 
 
 class ImageDataset(VisionDataset):
     """Image Dataset from samples, folders (classes by folders), dataframe."""
+
     classes: Optional[tuple[str, ...]]  # as torchvision Datasets examples
     class_to_idx: dict[str, int]  # as torchvision Datasets examples
 
@@ -129,7 +130,9 @@ class ImageDataset(VisionDataset):
             class_to_idx = {synset: SYNSET2TARGET[synset] for synset in classes}
         else:
             class_to_idx = {synset: num for num, synset in enumerate(classes)}
-        samples = tuple(zip(df.path.apply(str), df.synset.apply(lambda x: class_to_idx[x])))
+        samples = tuple(
+            zip(df.path.apply(str), df.synset.apply(lambda x: class_to_idx[x]))
+        )
         if num_samples:
             samples = samples[:num_samples]
         return cls(
