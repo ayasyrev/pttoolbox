@@ -66,6 +66,7 @@ def get_imagenette_dataloader(
     transform: Optional[Callable] = None,
     target_transform: Optional[Callable] = None,
     loader: Optional[Callable] = None,
+    sampler: Optional[Callable] = None,
     image_backend: str = "accimage",
     classes_as_imagenet: bool = False,
     num_workers: Optional[int] = None,
@@ -85,7 +86,7 @@ def get_imagenette_dataloader(
         image_backend=image_backend,
     )
     if split == "train":
-        shuffle = True
+        shuffle = sampler is None  # if sampler -> no shuffle
         drop_last = True
     else:
         shuffle = False
@@ -98,5 +99,6 @@ def get_imagenette_dataloader(
         shuffle=shuffle,
         drop_last=drop_last,
         num_workers=num_workers,
+        sampler=sampler,
         **kwargs,
     )
