@@ -12,26 +12,27 @@ from .imagedataset import ImageDataset, df_add_path
 
 def load_df(
     filename: Optional[str] = None,
-    dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
-    split: Literal["train", "val"] = "train",
+    dataset: Optional[Literal["imagenette2", "imagewoof2"]] = None,
+    split: Optional[Literal["train", "val"]] = None,
 ) -> pd.DataFrame:
     """Load dataframe with information about dataset from parquet file.
 
     Args:
         filename: path to parquet file. If no name is given, used prepared data.
-        dataset: dataset name, default: imagenette2
-        split: split name, default: train
+        dataset: dataset name, default: None - load full data
+        split: split name, default: None
     """
     if filename is None:
         filename = (
-            resources.files("pttoolbox.data.data_info") / f"{dataset}.parquet.gzip"
+            resources.files("pttoolbox.data.data_info") / "imagenette2.parquet.gzip"
         )
+    if dataset is None and split is None:
+        return pd.read_parquet(filename)
+    ds_filter = [("ds", "==", dataset)] if dataset else []
+    split_filter = [("split", "==", split)] if split else []
     return pd.read_parquet(
         filename,
-        filters=[
-            ("ds", "==", dataset),
-            ("split", "==", split),
-        ],
+        filters=ds_filter + split_filter,
     )
 
 
