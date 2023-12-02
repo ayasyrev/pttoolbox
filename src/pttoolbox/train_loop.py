@@ -1,5 +1,4 @@
 """Simple (base) pytorch train loop."""
-import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
@@ -16,7 +15,6 @@ class Cfg:
 
     epochs: int = 5
     lr: float = 0.001
-    # betas: tuple[float, float] = (0.95, 095)
     opt_cfg: dict[str, Any] = field(default_factory=dict)
 
 
@@ -37,18 +35,25 @@ def train_loop(
 
     num_last = 10
     metrics = {
+        # batch level
         "loss": torch.tensor(0.0, device=accelerator.device),
         "out": 0,
         "targets": torch.tensor(0.0, device=accelerator.device),
         "accuracy": torch.tensor(0.0, device=accelerator.device),
-        "last_loss": 0,
-        "losses": [],
-        "val_losses": [],
-        "train_acc": [],
-        "val_acc": [],
-        "last_losses": [1.0] * num_last,
-        "acc_val": AverageMeter(),
-        "acc_train": AverageMeter(),
+
+        # last `num_last` train losses for calculating average
+        "loss_train": [1.0] * num_last,
+        "loss_validate": torch.tensor(0.0, device=accelerator.device),
+
+        # epoch level
+        "acc_avgmeter_train": AverageMeter(),
+        "acc_avgmeter_validate": AverageMeter(),
+
+        "losses_train": [],
+        "losses_validate": [],
+        "accuracy_train": [],
+        "accuracy_validate": [],
+
         "time_train": [],
         "time_validate": [],
     }
@@ -61,36 +66,35 @@ def train_loop(
         return metrics
 
     def result_reset():
-        metrics["acc_train"].reset()
-        metrics["acc_val"].reset()
-        metrics["val_loss"] = torch.tensor(0.0, device=accelerator.device)
+        metrics["acc_avgmeter_train"].reset()
+        metrics["acc_avgmeter_validate"].reset()
+        metrics["loss_validate"] = torch.tensor(0.0, device=accelerator.device)
 
     def record_batch(mode: Literal["train", "validate"]):
         if mode == "train":
-            metrics["acc_train"].update(metrics["accuracy"].mean().cpu().item())
-            metrics["last_losses"].pop(0)
-            metrics["last_losses"].append(metrics["loss"].mean().cpu().item())
-            metrics["last_loss"] = sum(metrics["last_losses"]) / num_last
+            metrics["acc_avgmeter_train"].update(metrics["accuracy"].mean().cpu().item())
+            metrics["loss_train"].pop(0)
+            metrics["loss_train"].append(metrics["loss"].mean().cpu().item())
         elif mode == "validate":
-            metrics["val_loss"].add_(metrics["loss"].sum())
-            metrics["acc_val"].update(
+            metrics["loss_validate"].add_(metrics["loss"].sum())
+            metrics["acc_avgmeter_validate"].update(
                 metrics["accuracy"].item(), metrics["targets"].size(0)
             )
 
     def record_epoch(mode: Literal["train", "validate"]):
         if mode == "train":
-            metrics["losses"].append(metrics["last_loss"])
-            metrics["train_acc"].append(metrics["acc_train"].avg)
+            metrics["losses_train"].append(sum(metrics["loss_train"]) / num_last)
+            metrics["accuracy_train"].append(metrics["acc_avgmeter_train"].avg)
         elif mode == "validate":
-            metrics["val_losses"].append(
-                metrics["val_loss"].sum().item() / len(val_loader.dataset)
+            metrics["losses_validate"].append(
+                metrics["loss_validate"].sum().item() / len(val_loader.dataset)
             )
-            metrics["val_acc"].append(metrics["acc_val"].avg)
+            metrics["accuracy_validate"].append(metrics["acc_avgmeter_validate"].avg)
 
     def print_epoch_result(epoch: int):
         rprint(
-            f"epoch {epoch + 1} {metrics['train_acc'][-1] / 100:0.2%} {metrics['losses'][-1]:0.3f}"
-            f"    {metrics['val_acc'][-1] / 100:0.2%} {metrics['val_losses'][-1]:0.3f}"
+            f"epoch {epoch + 1} {metrics['accuracy_train'][-1] / 100:0.2%} {metrics['losses_train'][-1]:0.3f}"
+            f"    {metrics['accuracy_validate'][-1] / 100:0.2%} {metrics['losses_validate'][-1]:0.3f}"
             f"    {metrics['time_train'][-1]:0.1f} / {metrics['time_validate'][-1]:0.1f} sec"
         )
 
@@ -99,9 +103,9 @@ def train_loop(
         for epoch in range(cfg.epochs):
             progress.tasks[main_task].description = f"Epoch {epoch + 1} / {cfg.epochs}"
             result_reset()
+
             # train
             model.train()
-
             train_task = progress.add_task("Train", total=len(train_loader))
             for xb in train_loader:
                 one_batch(xb)
@@ -113,15 +117,11 @@ def train_loop(
                 progress.update(train_task, advance=1)
                 progress._tasks[
                     train_task
-                ].description = f"loss: {metrics['last_loss']:0.4f}"
+                ].description = f"loss: {sum(metrics['loss_train']) / num_last:0.4f}"
 
             metrics["time_train"].append(progress._tasks[train_task].finished_time)
             record_epoch("train")
-            progress._tasks[
-                train_task
-            ].description = (
-                f"{metrics['train_acc'][-1] / 100:.2%} {metrics['last_loss']:0.3f}"
-            )
+
             # validate
             with torch.no_grad():
                 model.eval()
