@@ -23,14 +23,14 @@ def train_loop(
     model: torch.nn.Module,
     opt_func: Callable,
     loss_func: Callable,
-    train_loader: torch.utils.data.DataLoader,
-    val_loader: torch.utils.data.DataLoader,
+    dl_train: torch.utils.data.DataLoader,
+    dl_validate: torch.utils.data.DataLoader,
 ):
     """Train loop."""
     opt = opt_func(model.parameters(), lr=cfg.lr, **cfg.opt_cfg)
     accelerator = Accelerator()
-    model, opt, train_loader, val_loader, loss_func = accelerator.prepare(
-        model, opt, train_loader, val_loader, loss_func
+    model, opt, dl_train, dl_validate, loss_func = accelerator.prepare(
+        model, opt, dl_train, dl_validate, loss_func
     )
 
     num_last = 10
@@ -87,7 +87,7 @@ def train_loop(
             metrics["accuracy_train"].append(metrics["acc_avgmeter_train"].avg)
         elif mode == "validate":
             metrics["losses_validate"].append(
-                metrics["loss_validate"].sum().item() / len(val_loader.dataset)
+                metrics["loss_validate"].sum().item() / len(dl_validate.dataset)
             )
             metrics["accuracy_validate"].append(metrics["acc_avgmeter_validate"].avg)
 
@@ -106,8 +106,8 @@ def train_loop(
 
             # train
             model.train()
-            train_task = progress.add_task("Train", total=len(train_loader))
-            for xb in train_loader:
+            train_task = progress.add_task("Train", total=len(dl_train))
+            for xb in dl_train:
                 one_batch(xb)
                 accelerator.backward(metrics["loss"].sum())
                 opt.step()
@@ -125,8 +125,8 @@ def train_loop(
             # validate
             with torch.no_grad():
                 model.eval()
-                val_task = progress.add_task("Val", total=len(val_loader))
-                for xb in val_loader:
+                val_task = progress.add_task("Val", total=len(dl_validate))
+                for xb in dl_validate:
                     one_batch(xb)
                     record_batch("validate")
                     progress.update(val_task, advance=1)
