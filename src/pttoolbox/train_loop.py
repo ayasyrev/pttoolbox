@@ -1,6 +1,6 @@
 """Simple (base) pytorch train loop."""
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Literal, Optional
 
 import torch
 from accelerate import Accelerator
@@ -25,6 +25,7 @@ def train_loop(
     loss_func: Callable,
     dl_train: torch.utils.data.DataLoader,
     dl_validate: torch.utils.data.DataLoader,
+    batch_transform: Optional[Callable] = None,
 ):
     """Train loop."""
     opt = opt_func(model.parameters(), lr=cfg.lr, **cfg.opt_cfg)
@@ -58,12 +59,20 @@ def train_loop(
         "time_validate": [],
     }
 
-    def one_batch(xb: tuple[torch.Tensor, torch.Tensor]) -> dict[str, torch.Tensor]:
-        metrics["out"] = model(xb[0])
-        metrics["loss"] = loss_func(metrics["out"], xb[1])
-        metrics["targets"] = xb[1]
-        metrics["accuracy"] = accuracy(metrics["out"], metrics["targets"])[0]
-        return metrics
+    if batch_transform:
+        def one_batch(xb: tuple[torch.Tensor, torch.Tensor]) -> dict[str, torch.Tensor]:
+            metrics["out"] = model(batch_transform(xb[0]))
+            metrics["loss"] = loss_func(metrics["out"], xb[1])
+            metrics["targets"] = xb[1]
+            metrics["accuracy"] = accuracy(metrics["out"], metrics["targets"])[0]
+            return metrics
+    else:
+        def one_batch(xb: tuple[torch.Tensor, torch.Tensor]) -> dict[str, torch.Tensor]:
+            metrics["out"] = model(xb[0])
+            metrics["loss"] = loss_func(metrics["out"], xb[1])
+            metrics["targets"] = xb[1]
+            metrics["accuracy"] = accuracy(metrics["out"], metrics["targets"])[0]
+            return metrics
 
     def result_reset():
         metrics["acc_avgmeter_train"].reset()
