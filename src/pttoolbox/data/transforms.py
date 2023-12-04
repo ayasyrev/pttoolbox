@@ -22,7 +22,12 @@ class ImageClassificationNoNorm(nn.Module):
         self.antialias = antialias
 
     def forward(self, img: Tensor) -> Tensor:
-        img = F.resize(img, self.resize_size, interpolation=self.interpolation, antialias=self.antialias)
+        img = F.resize(
+            img,
+            self.resize_size,
+            interpolation=self.interpolation,
+            antialias=self.antialias,
+        )
         img = F.center_crop(img, self.crop_size)
         if not isinstance(img, Tensor):
             img = F.pil_to_tensor(img)

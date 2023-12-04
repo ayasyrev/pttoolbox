@@ -1,8 +1,13 @@
 """Simple (base) pytorch train loop."""
-from dataclasses import dataclass, field
+import os
+import shutil
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Callable, Literal, Optional
 
 import torch
+import yaml
 from accelerate import Accelerator
 from rich import print as rprint
 from rich.progress import Progress
@@ -13,22 +18,29 @@ from timm.utils.metrics import AverageMeter, accuracy
 class Cfg:
     """Train loop config."""
 
+    exp_name: str = ""
+    ds: str = ""
+    model_name: str = ""
     epochs: int = 5
     lr: float = 0.001
+    opt_func: type[torch.optim.Optimizer] = torch.optim.AdamW
     opt_cfg: dict[str, Any] = field(default_factory=dict)
+    loss_func: type[torch.nn.Module] = torch.nn.CrossEntropyLoss
+    loss_func_cfg: dict[str, Any] = field(default_factory=lambda: {"reduction": "none"})
+    batch_transform: str = "normalize"
+    batch_size: int = 32
 
 
 def train_loop(
     cfg: Cfg,
     model: torch.nn.Module,
-    opt_func: Callable,
-    loss_func: Callable,
     dl_train: torch.utils.data.DataLoader,
     dl_validate: torch.utils.data.DataLoader,
     batch_transform: Optional[Callable] = None,
 ):
     """Train loop."""
-    opt = opt_func(model.parameters(), lr=cfg.lr, **cfg.opt_cfg)
+    opt = cfg.opt_func(model.parameters(), lr=cfg.lr, **cfg.opt_cfg)
+    loss_func = cfg.loss_func(**cfg.loss_func_cfg)
     accelerator = Accelerator()
     model, opt, dl_train, dl_validate, loss_func = accelerator.prepare(
         model, opt, dl_train, dl_validate, loss_func
@@ -41,32 +53,59 @@ def train_loop(
         "out": 0,
         "targets": torch.tensor(0.0, device=accelerator.device),
         "accuracy": torch.tensor(0.0, device=accelerator.device),
-
         # last `num_last` train losses for calculating average
         "loss_train": [1.0] * num_last,
         "loss_validate": torch.tensor(0.0, device=accelerator.device),
-
         # epoch level
         "acc_avgmeter_train": AverageMeter(),
         "acc_avgmeter_validate": AverageMeter(),
-
         "losses_train": [],
         "losses_validate": [],
         "accuracy_train": [],
         "accuracy_validate": [],
-
         "time_train": [],
         "time_validate": [],
     }
 
+    log_path = Path("__".join((datetime.now().strftime("%Y%m%d-%H%M%S"), cfg.exp_name)))
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    with open(log_path / "config.yaml", "w", encoding="utf-8") as f:
+        yaml.dump(asdict(cfg), f, indent=4)
+    with open(log_path / "model.txt", "w", encoding="utf-8") as f:
+        f.write(str(model))
+    headers = [
+        "loss_train",
+        "accuracy_train",
+        "loss_validate",
+        "accuracy_validate",
+        "time_train",
+        "time_validate",
+    ]
+    to_log = [
+        "losses_train",
+        "accuracy_train",
+        "losses_validate",
+        "accuracy_validate",
+        "time_train",
+        "time_validate",
+    ]
+
+    log_name = Path(".") / "log_result.csv"
+    log_result = open(log_name, "w", encoding="utf-8")
+    log_result.write(", ".join(headers) + "\n")
+
     if batch_transform:
+
         def one_batch(xb: tuple[torch.Tensor, torch.Tensor]) -> dict[str, torch.Tensor]:
             metrics["out"] = model(batch_transform(xb[0]))
             metrics["loss"] = loss_func(metrics["out"], xb[1])
             metrics["targets"] = xb[1]
             metrics["accuracy"] = accuracy(metrics["out"], metrics["targets"])[0]
             return metrics
+
     else:
+
         def one_batch(xb: tuple[torch.Tensor, torch.Tensor]) -> dict[str, torch.Tensor]:
             metrics["out"] = model(xb[0])
             metrics["loss"] = loss_func(metrics["out"], xb[1])
@@ -81,7 +120,9 @@ def train_loop(
 
     def record_batch(mode: Literal["train", "validate"]):
         if mode == "train":
-            metrics["acc_avgmeter_train"].update(metrics["accuracy"].mean().cpu().item())
+            metrics["acc_avgmeter_train"].update(
+                metrics["accuracy"].mean().cpu().item()
+            )
             metrics["loss_train"].pop(0)
             metrics["loss_train"].append(metrics["loss"].mean().cpu().item())
         elif mode == "validate":
@@ -106,6 +147,9 @@ def train_loop(
             f"    {metrics['accuracy_validate'][-1] / 100:0.2%} {metrics['losses_validate'][-1]:0.3f}"
             f"    {metrics['time_train'][-1]:0.1f} / {metrics['time_validate'][-1]:0.1f} sec"
         )
+        log_result.write(", ".join(str(metrics[key][-1]) for key in to_log) + "\n")
+        log_result.flush()
+        os.fsync(log_result.fileno())
 
     with Progress(transient=True) as progress:
         main_task = progress.add_task("", total=cfg.epochs)
@@ -148,4 +192,6 @@ def train_loop(
             progress.update(main_task, advance=1)
 
         progress.remove_task(main_task)
+    log_result.close()
+    shutil.copy(log_name, log_path / "log_result.csv")
     return metrics
