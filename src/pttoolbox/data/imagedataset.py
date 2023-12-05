@@ -6,13 +6,12 @@ from typing import Callable, Optional
 
 import pandas as pd
 import torch
-from torchvision import set_image_backend
-from torchvision.datasets.folder import default_loader
 from torchvision.datasets.vision import VisionDataset
 from torchvision.transforms._presets import ImageClassification
 
 from ..typing import PathOrStr
 from .get_files import get_files
+from .image_loader import accimage_loader, pil_loader
 from .imagenet1k_classes import SYNSET2TARGET, synset2target
 
 
@@ -43,8 +42,10 @@ class ImageDataset(VisionDataset):
             target_transform=target_transform,
         )
         if loader is None:
-            self.loader = default_loader
-            set_image_backend(image_backend)
+            if image_backend == "accimage":
+                self.loader = accimage_loader
+            else:
+                self.loader = pil_loader
         else:
             self.loader = loader
         assert samples
