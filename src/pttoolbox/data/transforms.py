@@ -13,7 +13,7 @@ class ImageClassificationNoNorm(nn.Module):
         crop_size: int,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = "warn",
+        antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
         self.crop_size = [crop_size]
