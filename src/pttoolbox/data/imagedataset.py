@@ -2,6 +2,7 @@
 As ImageFolderDataset -> base use from given samples.
 Use classes from imagenet, samples from dataframe.
 """
+from pathlib import Path
 from typing import Callable, Optional
 
 import pandas as pd
@@ -152,6 +153,6 @@ class ImageDataset(VisionDataset):
 
 def df_add_path(df: pd.DataFrame, root: PathOrStr) -> pd.DataFrame:
     """Add path column to dataframe with 'ds', 'split', 'synset', 'filename' columns."""
-    df["path"] = root / df.ds / df.split / df.synset / df.filename
+    df["path"] = Path(root) / df.ds / df.split / df.synset / df.filename
     assert df.path.iloc[0].exists()
     return df
