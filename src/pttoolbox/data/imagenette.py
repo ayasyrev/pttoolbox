@@ -7,6 +7,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from ..typing import PathOrStr
+from .dataset_persistent import DatasetPersistent, persistent_dataset_from_df
 from .imagedataset import ImageDataset, df_add_path
 
 
@@ -98,6 +99,52 @@ def get_imagenette_dataloader(
         batch_size=batch_size,
         shuffle=shuffle,
         drop_last=drop_last,
+        num_workers=num_workers,
+        sampler=sampler,
+        **kwargs,
+    )
+
+
+def get_persistent_imagenette_dataloader(
+    root: PathOrStr,
+    dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
+    split: Literal["train", "val"] = "train",
+    num_samples: int = 0,
+    batch_size: int = 32,
+    transforms: Optional[Callable] = None,
+    transform: Optional[Callable] = None,
+    target_transform: Optional[Callable] = None,
+    loader: Optional[Callable] = None,
+    sampler: Optional[Callable] = None,
+    # image_backend: str = "accimage",
+    classes_as_imagenet: bool = False,
+    num_workers: Optional[int] = None,
+    indexes: Optional[list[list[int]]] = None,
+    epochs: Optional[int] = None,
+    **kwargs,
+) -> DataLoader:
+    """Create persistent DataLoader for Imagenette2 / Imagewoof2."""
+    df = load_df(dataset=dataset, split=split)
+    df_add_path(df, root)
+    dataset = persistent_dataset_from_df(
+        root=root,
+        df=df,
+        num_samples=num_samples,
+        indexes=indexes,
+        epochs=epochs,
+        classes_as_imagenet=classes_as_imagenet,
+        transforms=transforms,
+        transform=transform,
+        target_transform=target_transform,
+        loader=loader,
+    )
+    if num_workers is None:
+        num_workers = os.cpu_count()
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=split == "train",
         num_workers=num_workers,
         sampler=sampler,
         **kwargs,

@@ -11,7 +11,6 @@ def pil_loader(path: str) -> Image.Image:
 
 
 def accimage_loader_safe(path: str) -> accimage.Image:
-
     try:
         return accimage.Image(path)
     except OSError:

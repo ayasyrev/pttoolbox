@@ -17,7 +17,8 @@ def load_df(
     """
     if filename is None:
         filename = (
-            resources.files("pttoolbox.data.data_info") / f"imagenet1k_{split}.parquet.gzip"
+            resources.files("pttoolbox.data.data_info")
+            / f"imagenet1k_{split}.parquet.gzip"
         )
     print(filename)
     return pd.read_parquet(filename)
