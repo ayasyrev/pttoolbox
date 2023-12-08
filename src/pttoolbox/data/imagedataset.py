@@ -64,9 +64,10 @@ class ImageDataset(VisionDataset):
             self.class_to_idx = {key: num for num, key in enumerate(self.classes)}
         if transform is None:
             self.transform = ImageClassification(crop_size=224)
+        self._num_samples = len(self.samples)
 
     def __len__(self) -> int:
-        return len(self.samples)
+        return self._num_samples
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
         return (
@@ -125,22 +126,11 @@ class ImageDataset(VisionDataset):
     ):
         """Create dataset from dataframe.
         Dataframe should have columns 'path' and 'synset' columns"""
-        assert "path" in df.columns
-        assert "synset" in df.columns
-        classes = tuple(sorted(df.synset.unique()))
-        if classes_as_imagenet:
-            class_to_idx = {synset: SYNSET2TARGET[synset] for synset in classes}
-        else:
-            class_to_idx = {synset: num for num, synset in enumerate(classes)}
-        samples = tuple(
-            zip(df.path.apply(str), df.synset.apply(lambda x: class_to_idx[x]))
-        )
-        if num_samples:
-            samples = samples[:num_samples]
+        samples, class_to_idx = samples_from_df(df, num_samples=num_samples)
         return cls(
             root=root,
             samples=samples,
-            classes=classes,
+            # classes=classes,
             class_to_idx=class_to_idx,
             transforms=transforms,
             transform=transform,
@@ -156,3 +146,30 @@ def df_add_path(df: pd.DataFrame, root: PathOrStr) -> pd.DataFrame:
     df["path"] = Path(root) / df.ds / df.split / df.synset / df.filename
     assert df.path.iloc[0].exists()
     return df
+
+
+def samples_from_df(
+    df: pd.DataFrame,
+    num_samples: Optional[int] = None,
+    classes_as_imagenet: bool = False,
+) -> tuple[tuple[tuple[str, int], ...], dict[str, int]]:
+    """Generate samples and class_to_idx from dataframe.
+
+    Args:
+        df (pd.DataFrame): Dataframe with columns 'path' and 'synset'
+        num_samples (Optional[int], optional): Number of samples. Defaults to None.
+
+    Returns:
+        tuple[tuple[tuple[str, int], ...], dict[str, int]]: Samples and class_to_idx
+    """
+    assert "synset" in df.columns
+    assert "path" in df.columns
+    classes = tuple(sorted(df.synset.unique()))
+    if classes_as_imagenet:
+        class_to_idx = {synset: SYNSET2TARGET[synset] for synset in classes}
+    else:
+        class_to_idx = {synset: num for num, synset in enumerate(classes)}
+    samples = tuple(zip(df.path.apply(str), df.synset.apply(lambda x: class_to_idx[x])))
+    if num_samples:
+        samples = samples[:num_samples]
+    return samples, class_to_idx
