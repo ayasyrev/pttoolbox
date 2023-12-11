@@ -4,7 +4,7 @@ import shutil
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Callable, Literal, Optional, Union
 
 import torch
 import yaml
@@ -29,6 +29,7 @@ class Cfg:
     loss_func_cfg: dict[str, Any] = field(default_factory=lambda: {"reduction": "none"})
     batch_transform: str = "normalize"
     batch_size: int = 32
+    log_path: Union[str, Path] = "."
 
 
 def train_loop(
@@ -67,7 +68,9 @@ def train_loop(
         "time_validate": [],
     }
 
-    log_path = Path("__".join((datetime.now().strftime("%Y%m%d-%H%M%S"), cfg.exp_name)))
+    log_path = Path(cfg.log_path) / "__".join(
+        [datetime.now().strftime("%Y%m%d-%H%M%S"), cfg.exp_name]
+    )
     log_path.mkdir(parents=True, exist_ok=True)
 
     with open(log_path / "config.yaml", "w", encoding="utf-8") as f:
@@ -91,7 +94,7 @@ def train_loop(
         "time_validate",
     ]
 
-    log_name = Path(".") / "log_result.csv"
+    log_name = Path(cfg.log_path) / "log_result.csv"
     log_result = open(log_name, "w", encoding="utf-8")
     log_result.write(", ".join(headers) + "\n")
 
@@ -171,7 +174,8 @@ def train_loop(
                 progress._tasks[
                     train_task
                 ].description = f"loss: {sum(metrics['loss_train']) / num_last:0.4f}"
-
+            if hasattr(dl_train.dataset, "step_epoch"):
+                dl_train.dataset.step_epoch()
             metrics["time_train"].append(progress._tasks[train_task].finished_time)
             record_epoch("train")
 
