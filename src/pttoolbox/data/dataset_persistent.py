@@ -89,4 +89,8 @@ def persistent_dataset_from_df(
         classes=class_to_idx.keys(),
         class_to_idx=class_to_idx,
         epochs=epochs,
+        transforms=transforms,
+        transform=transform,
+        target_transform=target_transform,
+        loader=loader,
     )
