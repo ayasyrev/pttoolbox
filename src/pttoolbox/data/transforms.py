@@ -71,3 +71,50 @@ class Normalize(nn.Module):
         format_string += f"\n    std={self.std}"
         format_string += "\n)"
         return format_string
+
+
+class TrainPersistentTransform(nn.Module):
+    def __init__(
+        self,
+        *,
+        crop_size: int = 224,
+        resize_size: int = 256,
+        interpolation: InterpolationMode = InterpolationMode.BILINEAR,
+        antialias: Optional[Union[str, bool]] = True,
+    ) -> None:
+        super().__init__()
+        self.crop_size = [crop_size]
+        self.resize_size = [resize_size]
+        self.interpolation = interpolation
+        self.antialias = antialias
+
+    def forward(
+        self,
+        img: Tensor,
+        flip: Union[bool, int] = 0,
+        # rotate: int = 0,  # -60 -- 60
+        shift_x: int = 16,  # 0 -- 32
+        shift_y: int = 16,  # 0 -- 32
+    ) -> Tensor:
+        img = F.resize(
+            img,
+            self.resize_size,
+            interpolation=self.interpolation,
+            antialias=self.antialias,
+        )
+        if flip:
+            img = F.hflip(img)
+        # img = F.rotate(img, rotate / 10)
+        img = F.crop(img, shift_x, shift_y, self.crop_size[0], self.crop_size[0])
+        if not isinstance(img, Tensor):
+            img = F.pil_to_tensor(img)
+        img = F.convert_image_dtype(img, torch.float)
+        return img
+
+    def __repr__(self) -> str:
+        format_string = self.__class__.__name__ + "("
+        format_string += f"\n    crop_size={self.crop_size}"
+        format_string += f"\n    resize_size={self.resize_size}"
+        format_string += f"\n    interpolation={self.interpolation}"
+        format_string += "\n)"
+        return format_string

@@ -120,6 +120,7 @@ def get_persistent_imagenette_dataloader(
     classes_as_imagenet: bool = False,
     num_workers: Optional[int] = None,
     indexes: Optional[list[list[int]]] = None,
+    transform_indexes: Optional[list[list[int]]] = None,
     epochs: Optional[int] = None,
     **kwargs,
 ) -> DataLoader:
@@ -131,6 +132,7 @@ def get_persistent_imagenette_dataloader(
         df=df,
         num_samples=num_samples,
         indexes=indexes,
+        transform_indexes=transform_indexes,
         epochs=epochs,
         classes_as_imagenet=classes_as_imagenet,
         transforms=transforms,
