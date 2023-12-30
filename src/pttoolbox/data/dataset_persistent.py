@@ -44,7 +44,7 @@ class DatasetPersistent(ImageDataset):
             transform=transform,
             target_transform=target_transform,
             loader=loader,
-            classes_as_imagenet=classes_as_imagenet,
+            # classes_as_imagenet=classes_as_imagenet,
         )
         if indexes is None:
             self.indexes = [list(range(len(self.samples)))]

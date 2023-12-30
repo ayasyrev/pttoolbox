@@ -7,8 +7,8 @@ import pandas as pd
 from torch.utils.data import DataLoader
 
 from ..typing import PathOrStr
-from .dataset_persistent import DatasetPersistent, persistent_dataset_from_df
-from .imagedataset import ImageDataset, df_add_path
+from .dataset_persistent import persistent_dataset_from_df
+from .imagedataset import ImageDataset, df_add_path, imagedataset_from_df
 
 
 def load_df(
@@ -38,7 +38,7 @@ def load_df(
 
 
 def get_imagenette_dataset(
-    root: PathOrStr,
+    root: Optional[PathOrStr] = None,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
     num_samples: int = 0,
@@ -48,9 +48,9 @@ def get_imagenette_dataset(
     """Create ImageDataset for Imagenette2 / Imagewoof2."""
     df = load_df(dataset=dataset, split=split)
     df_add_path(df, root)
-    return ImageDataset.from_df(
-        root,
+    return imagedataset_from_df(
         df,
+        root=root,
         num_samples=num_samples,
         classes_as_imagenet=classes_as_imagenet,
         **kwargs,
@@ -68,7 +68,7 @@ def get_imagenette_dataloader(
     target_transform: Optional[Callable] = None,
     loader: Optional[Callable] = None,
     sampler: Optional[Callable] = None,
-    image_backend: str = "accimage",
+    # image_backend: str = "accimage",
     classes_as_imagenet: bool = False,
     num_workers: Optional[int] = None,
     **kwargs,
@@ -84,7 +84,7 @@ def get_imagenette_dataloader(
         transform=transform,
         target_transform=target_transform,
         loader=loader,
-        image_backend=image_backend,
+        # image_backend=image_backend,
     )
     if split == "train":
         shuffle = sampler is None  # if sampler -> no shuffle

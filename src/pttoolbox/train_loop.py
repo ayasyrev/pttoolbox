@@ -21,6 +21,7 @@ class Cfg:
     exp_name: str = ""
     ds: str = ""
     model_name: str = ""
+    model_weights: Optional[str] = None
     epochs: int = 5
     lr: float = 0.001
     opt_func: type[torch.optim.Optimizer] = torch.optim.AdamW

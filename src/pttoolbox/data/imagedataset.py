@@ -8,23 +8,25 @@ from typing import Callable, Optional
 import pandas as pd
 import torch
 from torchvision.datasets.vision import VisionDataset
-from torchvision.transforms._presets import ImageClassification
+from torchvision.datasets.folder import default_loader
 
 from ..typing import PathOrStr
 from .get_files import get_files
 from .image_loader import accimage_loader, pil_loader
 from .imagenet1k_classes import SYNSET2TARGET, synset2target
+from .transforms import ImageClassification
 
 
 class ImageDataset(VisionDataset):
-    """Image Dataset from samples, folders (classes by folders), dataframe."""
+    """Image Dataset from samples"""
 
     classes: Optional[tuple[str, ...]]  # as torchvision Datasets examples
     class_to_idx: dict[str, int]  # as torchvision Datasets examples
 
     def __init__(
         self,
-        root: PathOrStr,
+        *,
+        root: Optional[PathOrStr] = None,  # only for compatibility
         samples: tuple[tuple[str, int], ...],
         classes: Optional[tuple[str, ...]] = None,
         class_to_idx: Optional[dict[str, int]] = None,
@@ -32,36 +34,21 @@ class ImageDataset(VisionDataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         loader: Optional[Callable] = None,
-        image_backend: str = "accimage",
-        classes_as_imagenet: bool = False,
+        # image_backend: str = "accimage",
+        # classes_as_imagenet: bool = False,
     ):
-        """Nette / woof ds."""
+        """Image Dataset from samples - samples as tuple - filename and target"""
         super().__init__(
-            root=str(root),
+            root=root,
             transforms=transforms,
             transform=transform,
             target_transform=target_transform,
         )
-        if loader is None:
-            if image_backend == "accimage":
-                self.loader = accimage_loader
-            else:
-                self.loader = pil_loader
-        else:
-            self.loader = loader
+        self.loader = loader or default_loader
         assert samples
         self.samples = samples
-        self.classes = classes or tuple(
-            sorted(set(sample[0].split("/")[-2] for sample in self.samples))
-        )
-        if class_to_idx is not None:
-            self.class_to_idx = class_to_idx
-        elif classes_as_imagenet:
-            self.class_to_idx = {
-                synset: SYNSET2TARGET[synset] for synset in self.classes
-            }
-        else:
-            self.class_to_idx = {key: num for num, key in enumerate(self.classes)}
+        self.classes = classes
+        self.class_to_idx = class_to_idx
         if transform is None:
             self.transform = ImageClassification(crop_size=224)
         self._num_samples = len(self.samples)
@@ -75,70 +62,61 @@ class ImageDataset(VisionDataset):
             self.samples[index][1],
         )
 
-    @classmethod
-    def from_folder(
-        cls,
-        root: PathOrStr,
-        *,
-        transforms: Optional[Callable] = None,
-        transform: Optional[Callable] = None,
-        target_transform: Optional[Callable] = None,
-        loader: Optional[Callable] = None,
-        image_backend: str = "accimage",
-        classes_as_imagenet: bool = False,
-        num_samples: int = 0,
-    ):
-        """Create dataset from folder structure. Folders as classes."""
-        filenames = get_files(root, num_samples=num_samples)
-        synsets = [fn.parent.name for fn in filenames]
-        classes = tuple(sorted(set(synsets)))
-        if classes_as_imagenet:
-            class_to_idx = {synset: SYNSET2TARGET[synset] for synset in classes}
-        else:
-            class_to_idx = {key: num for num, key in enumerate(classes)}
-        # samples = tuple((str(fn), synset2target[fn.parent.name]) for fn in filenames)
-        return cls(
-            root=root,
-            samples=tuple(zip(map(str, filenames), map(synset2target, synsets))),
-            classes=classes,
-            class_to_idx=class_to_idx,
-            transforms=transforms,
-            transform=transform,
-            target_transform=target_transform,
-            loader=loader,
-            image_backend=image_backend,
-            classes_as_imagenet=classes_as_imagenet,
-        )
 
-    @classmethod
-    def from_df(
-        cls,
-        root: PathOrStr,
-        df: pd.DataFrame,
-        *,
-        transforms: Optional[Callable] = None,
-        transform: Optional[Callable] = None,
-        target_transform: Optional[Callable] = None,
-        loader: Optional[Callable] = None,
-        image_backend: str = "accimage",
-        classes_as_imagenet: bool = False,
-        num_samples: int = 0,
-    ):
-        """Create dataset from dataframe.
-        Dataframe should have columns 'path' and 'synset' columns"""
-        samples, class_to_idx = samples_from_df(df, num_samples=num_samples)
-        return cls(
-            root=root,
-            samples=samples,
-            # classes=classes,
-            class_to_idx=class_to_idx,
-            transforms=transforms,
-            transform=transform,
-            target_transform=target_transform,
-            loader=loader,
-            image_backend=image_backend,
-            classes_as_imagenet=classes_as_imagenet,
-        )
+def imagedataset_from_folder(
+    root: PathOrStr,
+    *,
+    transforms: Optional[Callable] = None,
+    transform: Optional[Callable] = None,
+    target_transform: Optional[Callable] = None,
+    loader: Optional[Callable] = None,
+    classes_as_imagenet: bool = False,
+    num_samples: int = 0,
+) -> ImageDataset:
+    """Create dataset from folder structure. Folders as classes."""
+    filenames = get_files(root, num_samples=num_samples)
+    synsets = [fn.parent.name for fn in filenames]
+    classes = tuple(sorted(set(synsets)))
+    if classes_as_imagenet:
+        class_to_idx = {synset: SYNSET2TARGET[synset] for synset in classes}
+    else:
+        class_to_idx = {key: num for num, key in enumerate(classes)}
+    return ImageDataset(
+        root=root,
+        samples=tuple(zip(map(str, filenames), map(synset2target, synsets))),
+        classes=classes,
+        class_to_idx=class_to_idx,
+        transforms=transforms,
+        transform=transform,
+        target_transform=target_transform,
+        loader=loader,
+    )
+
+
+def imagedataset_from_df(
+    df: pd.DataFrame,
+    *,
+    root: Optional[PathOrStr] = None,
+    transforms: Optional[Callable] = None,
+    transform: Optional[Callable] = None,
+    target_transform: Optional[Callable] = None,
+    loader: Optional[Callable] = None,
+    # image_backend: str = "accimage",
+    classes_as_imagenet: bool = False,
+    num_samples: int = 0,
+) -> ImageDataset:
+    """Create dataset from dataframe.
+    Dataframe should have columns 'path' and 'synset' columns"""
+    samples, class_to_idx = samples_from_df(df, num_samples=num_samples, classes_as_imagenet=classes_as_imagenet)
+    return ImageDataset(
+        root=root,
+        samples=samples,
+        class_to_idx=class_to_idx,
+        transforms=transforms,
+        transform=transform,
+        target_transform=target_transform,
+        loader=loader,
+    )
 
 
 def df_add_path(df: pd.DataFrame, root: PathOrStr) -> pd.DataFrame:
