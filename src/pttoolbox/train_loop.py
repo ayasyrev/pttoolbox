@@ -66,7 +66,6 @@ def initiate_metrics(cfg: Optional[Cfg] = None, device=None) -> Metrics:
         "out": 0,
         "targets": torch.tensor(0.0, device=device),
         "accuracy": torch.tensor(0.0, device=device),
-        # last `num_last` train losses for calculating average
         "loss_train": [1.0] * num_last,
         "loss_validate": torch.tensor(0.0, device=device),
         # epoch level
@@ -146,7 +145,6 @@ def train_loop(
         model, opt, dl_train, dl_validate, loss_func
     )
 
-    # num_last = 10
     log_path = Path(cfg.log_path) / "__".join(
         [datetime.now().strftime("%Y%m%d-%H%M%S"), cfg.exp_name]
     )

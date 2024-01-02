@@ -5,6 +5,7 @@ from torch import nn, Tensor
 
 from torchvision.transforms import functional as F, InterpolationMode
 from torchvision.transforms.v2 import functional as Fv2
+from torchvision.utils import _log_api_usage_once
 
 
 class ImageClassification(nn.Module):
@@ -341,3 +342,103 @@ class TrainPersistentTransformV2(nn.Module):
         format_string += f"\n    interpolation={self.interpolation}"
         format_string += "\n)"
         return format_string
+
+
+class ResizeCenterCropV2(nn.Module):
+    def __init__(
+        self,
+        *,
+        crop_size: int,
+        resize_size: int = 256,
+        interpolation: InterpolationMode = InterpolationMode.BILINEAR,
+        antialias: Optional[Union[str, bool]] = True,
+    ) -> None:
+        super().__init__()
+        self.crop_size = (crop_size, )
+        self.crop_size = (crop_size, )
+        self.resize_size = (resize_size, )
+        self.interpolation = interpolation
+        self.antialias = antialias
+
+    def forward(self, img: Tensor) -> Tensor:
+        img = Fv2.resize(
+            img,
+            self.resize_size,
+            interpolation=self.interpolation,
+            antialias=self.antialias,
+        )
+        return Fv2.center_crop(img, self.crop_size)
+
+
+class TrainPersistentTrfmV2(nn.Module):
+    def __init__(
+        self,
+        *,
+        crop_size: int = 224,
+        resize_size: int = 256,
+        interpolation: InterpolationMode = InterpolationMode.BILINEAR,
+        antialias: Optional[Union[str, bool]] = True,
+    ) -> None:
+        super().__init__()
+        self.crop_size = (crop_size, )
+        self.resize_size = (resize_size, )
+        self.interpolation = interpolation
+        self.antialias = antialias
+
+    def forward(
+        self,
+        img: Tensor,
+        flip: int = 0,
+        # rotate: int = 0,  # -60 -- 60
+        shift_x: int = 16,  # 0 -- 32
+        shift_y: int = 16,  # 0 -- 32
+    ) -> Tensor:
+        img = Fv2.resize(
+            img,
+            self.resize_size,
+            interpolation=self.interpolation,
+            antialias=self.antialias,
+        )
+        if flip:
+            img = Fv2.hflip(img)
+        # img = F.rotate(img, rotate / 10)
+        return Fv2.crop(img, shift_x, shift_y, self.crop_size[0], self.crop_size[0])
+ 
+
+class ConvertNormalizeV2(nn.Module):
+    def __init__(
+        self,
+        *,
+        mean: Tuple[float, ...] = (123.6750, 116.2800, 103.5300),
+        std: Tuple[float, ...] = (58.3950, 57.1200, 57.3750),
+    ) -> None:
+        super().__init__()
+        self.mean = mean
+        self.std = std
+
+    def forward(self, img: Tensor) -> Tensor:
+        img = img.to(torch.float)
+        img = Fv2.normalize(img, mean=self.mean, std=self.std)
+        return img
+
+    def __repr__(self) -> str:
+        format_string = self.__class__.__name__ + "("
+        format_string += f"\n    mean={self.mean}"
+        format_string += f"\n    std={self.std}"
+        format_string += "\n)"
+   
+
+class ConvertNormV2(nn.Module):
+    def __init__(
+        self,
+        *,
+        mean: Tuple[float, ...] = (123.6750, 116.2800, 103.5300),
+        std: Tuple[float, ...] = (58.3950, 57.1200, 57.3750),
+    ) -> None:
+        super().__init__()
+        _log_api_usage_once(self)
+        self.mean = torch.as_tensor(mean, dtype=torch.float).view(-1, 1, 1)
+        self.std = torch.as_tensor(std, dtype=torch.float).view(-1, 1, 1)
+
+    def forward(self, tensor: Tensor) -> Tensor:
+        return tensor.to(torch.float).sub_(self.mean).div_(self.std)

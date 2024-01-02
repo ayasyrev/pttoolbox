@@ -34,8 +34,6 @@ class ImageDataset(VisionDataset):
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         loader: Optional[Callable] = None,
-        # image_backend: str = "accimage",
-        # classes_as_imagenet: bool = False,
     ):
         """Image Dataset from samples - samples as tuple - filename and target"""
         super().__init__(
@@ -51,6 +49,8 @@ class ImageDataset(VisionDataset):
         self.class_to_idx = class_to_idx
         if transform is None:
             self.transform = ImageClassification(crop_size=224)
+        if target_transform is None:
+            self.target_transform = torch.tensor
         self._num_samples = len(self.samples)
 
     def __len__(self) -> int:
@@ -59,7 +59,7 @@ class ImageDataset(VisionDataset):
     def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
         return (
             self.transform(self.loader(self.samples[index][0])),
-            self.samples[index][1],
+            self.target_transform(self.samples[index][1]),
         )
 
 

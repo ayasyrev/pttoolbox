@@ -1,6 +1,7 @@
 # copied from torchvision and refactored
 import accimage
 from PIL import Image
+from torchvision.io import read_image, ImageReadMode
 
 
 def pil_loader(path: str) -> Image.Image:
@@ -21,3 +22,7 @@ def accimage_loader_safe(path: str) -> accimage.Image:
 # @lru_cache(maxsize=None)
 def accimage_loader(path: str) -> accimage.Image:
     return accimage.Image(path)
+
+
+def io_loader(path: str):
+    return read_image(path, mode=ImageReadMode.RGB)
