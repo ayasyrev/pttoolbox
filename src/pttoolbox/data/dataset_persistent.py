@@ -1,5 +1,6 @@
 """Persistent Image Dataset.
 """
+
 from typing import Callable, Optional
 
 import pandas as pd
@@ -27,7 +28,9 @@ class DatasetPersistent(ImageDataset):
         classes: Optional[tuple[str, ...]] = None,
         class_to_idx: Optional[dict[str, int]] = None,
         transforms: Optional[Callable] = None,
-        transform: Optional[Callable[[torch.Tensor, int, int, int], torch.Tensor]] = None,
+        transform: Optional[
+            Callable[[torch.Tensor, int, int, int], torch.Tensor]
+        ] = None,
         target_transform: Optional[Callable] = None,
         loader: Optional[Callable] = None,
         classes_as_imagenet: bool = False,
@@ -57,11 +60,13 @@ class DatasetPersistent(ImageDataset):
         self.epoch = 0
 
     def create_transform_args(self, epoch: int) -> None:
-        epoch_index_list = [item for item in self.transform_indexes]  # permute it by epochs
+        epoch_index_list = [
+            item for item in self.transform_indexes
+        ]  # permute it by epochs
         num_args = len(epoch_index_list)
         self.transform_args = [
-            
-            (epoch_index_list[j][i] for j in range(num_args)) for i in range(self._num_samples)
+            (epoch_index_list[j][i] for j in range(num_args))
+            for i in range(self._num_samples)
         ]
 
     def step_epoch(self) -> None:
@@ -76,7 +81,9 @@ class DatasetPersistent(ImageDataset):
         else:
             sample_transforms = (0, 16, 16)
         return (
-            self.transform(self.loader(self.samples[sample_index][0]), *sample_transforms),
+            self.transform(
+                self.loader(self.samples[sample_index][0]), *sample_transforms
+            ),
             self.samples[sample_index][1],
         )
 

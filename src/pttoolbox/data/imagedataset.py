@@ -2,17 +2,17 @@
 As ImageFolderDataset -> base use from given samples.
 Use classes from imagenet, samples from dataframe.
 """
+
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
 import pandas as pd
 import torch
-from torchvision.datasets.vision import VisionDataset
 from torchvision.datasets.folder import default_loader
+from torchvision.datasets.vision import VisionDataset
 
 from ..typing import PathOrStr
 from .get_files import get_files
-from .image_loader import accimage_loader, pil_loader
 from .imagenet1k_classes import SYNSET2TARGET, synset2target
 from .transforms import ImageClassification
 
@@ -21,7 +21,7 @@ class ImageDataset(VisionDataset):
     """Image Dataset from samples"""
 
     classes: Optional[tuple[str, ...]]  # as torchvision Datasets examples
-    class_to_idx: dict[str, int]  # as torchvision Datasets examples
+    class_to_idx: Optional[dict[str, int]]  # as torchvision Datasets examples
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class ImageDataset(VisionDataset):
     def __len__(self) -> int:
         return self._num_samples
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, int]:
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, Union[int, torch.Tensor]]:
         return (
             self.transform(self.loader(self.samples[index][0])),
             self.target_transform(self.samples[index][1]),
@@ -107,7 +107,9 @@ def imagedataset_from_df(
 ) -> ImageDataset:
     """Create dataset from dataframe.
     Dataframe should have columns 'path' and 'synset' columns"""
-    samples, class_to_idx = samples_from_df(df, num_samples=num_samples, classes_as_imagenet=classes_as_imagenet)
+    samples, class_to_idx = samples_from_df(
+        df, num_samples=num_samples, classes_as_imagenet=classes_as_imagenet
+    )
     return ImageDataset(
         root=root,
         samples=samples,

@@ -1,7 +1,7 @@
 # copied from torchvision and refactored
 import accimage
 from PIL import Image
-from torchvision.io import read_image, ImageReadMode
+from torchvision.io import ImageReadMode, read_image
 
 
 def pil_loader(path: str) -> Image.Image:

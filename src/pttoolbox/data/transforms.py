@@ -1,9 +1,9 @@
 from typing import Optional, Tuple, Union
 
 import torch
-from torch import nn, Tensor
-
-from torchvision.transforms import functional as F, InterpolationMode
+from torch import Tensor, nn
+from torchvision.transforms import InterpolationMode
+from torchvision.transforms import functional as F
 from torchvision.transforms.v2 import functional as Fv2
 from torchvision.utils import _log_api_usage_once
 
@@ -21,8 +21,8 @@ class ImageClassification(nn.Module):
     ) -> None:
         """Basic transforms, copied and adapted from torchvision.transforms._presets"""
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.mean = mean
         self.std = std
         self.interpolation = interpolation
@@ -74,8 +74,8 @@ class ImageClassificationV2(nn.Module):
     ) -> None:
         """Basic V2 transforms, copied and adapted from torchvision.transforms._presets"""
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.mean = mean
         self.std = std
         self.interpolation = interpolation
@@ -124,8 +124,8 @@ class ImageClassificationNoNorm(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -168,9 +168,9 @@ class ImageClassificationNoNormV2(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -201,7 +201,6 @@ class ImageClassificationNoNormV2(nn.Module):
             f"The images are resized to ``resize_size={self.resize_size}`` using ``interpolation={self.interpolation}``, "
             f"followed by a central crop of ``crop_size={self.crop_size}``. Finally the values are rescaled to ``[0.0, 1.0]``."
         )
-
 
 
 class Normalize(nn.Module):
@@ -260,8 +259,8 @@ class TrainPersistentTransform(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -307,8 +306,8 @@ class TrainPersistentTransformV2(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -354,9 +353,9 @@ class ResizeCenterCropV2(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -380,8 +379,8 @@ class TrainPersistentTrfmV2(nn.Module):
         antialias: Optional[Union[str, bool]] = True,
     ) -> None:
         super().__init__()
-        self.crop_size = (crop_size, )
-        self.resize_size = (resize_size, )
+        self.crop_size = (crop_size,)
+        self.resize_size = (resize_size,)
         self.interpolation = interpolation
         self.antialias = antialias
 
@@ -403,7 +402,7 @@ class TrainPersistentTrfmV2(nn.Module):
             img = Fv2.hflip(img)
         # img = F.rotate(img, rotate / 10)
         return Fv2.crop(img, shift_x, shift_y, self.crop_size[0], self.crop_size[0])
- 
+
 
 class ConvertNormalizeV2(nn.Module):
     def __init__(
@@ -426,7 +425,8 @@ class ConvertNormalizeV2(nn.Module):
         format_string += f"\n    mean={self.mean}"
         format_string += f"\n    std={self.std}"
         format_string += "\n)"
-   
+        return format_string
+
 
 class ConvertNormV2(nn.Module):
     def __init__(
@@ -434,11 +434,14 @@ class ConvertNormV2(nn.Module):
         *,
         mean: Tuple[float, ...] = (123.6750, 116.2800, 103.5300),
         std: Tuple[float, ...] = (58.3950, 57.1200, 57.3750),
+        device: str = "cpu",
     ) -> None:
         super().__init__()
         _log_api_usage_once(self)
-        self.mean = torch.as_tensor(mean, dtype=torch.float).view(-1, 1, 1)
-        self.std = torch.as_tensor(std, dtype=torch.float).view(-1, 1, 1)
+        self.mean = torch.as_tensor(mean, dtype=torch.float, device=device).view(
+            -1, 1, 1
+        )
+        self.std = torch.as_tensor(std, dtype=torch.float, device=device).view(-1, 1, 1)
 
     def forward(self, tensor: Tensor) -> Tensor:
         return tensor.to(torch.float).sub_(self.mean).div_(self.std)
