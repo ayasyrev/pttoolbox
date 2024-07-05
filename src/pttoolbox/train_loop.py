@@ -185,7 +185,7 @@ def train_loop(
     if batch_transform:
 
         def one_batch(
-            batch: tuple[torch.Tensor, torch.Tensor],
+            batch: list[torch.Tensor],
             metrics: Metrics,
         ) -> Metrics:
             batch[0] = batch[0].to(memory_format=torch.channels_last)
@@ -198,7 +198,7 @@ def train_loop(
     else:
 
         def one_batch(
-            batch: tuple[torch.Tensor, torch.Tensor],
+            batch: list[torch.Tensor],
             metrics: Metrics,
         ) -> Metrics:
             metrics["out"] = model(batch[0])
@@ -208,7 +208,7 @@ def train_loop(
             return metrics
 
     def one_batch_val(
-        batch: tuple[torch.Tensor, torch.Tensor],
+        batch: list[torch.Tensor],
         metrics: Metrics,
     ) -> Metrics:
         metrics["out"] = model(batch[0])
