@@ -71,7 +71,7 @@ def imagedataset_from_folder(
     target_transform: Optional[Callable] = None,
     loader: Optional[Callable] = None,
     classes_as_imagenet: bool = False,
-    num_samples: int = 0,
+    num_samples: Optional[int] = None,
 ) -> ImageDataset:
     """Create dataset from folder structure. Folders as classes."""
     filenames = get_files(root, num_samples=num_samples)
@@ -103,7 +103,7 @@ def imagedataset_from_df(
     loader: Optional[Callable] = None,
     # image_backend: str = "accimage",
     classes_as_imagenet: bool = False,
-    num_samples: int = 0,
+    num_samples: Optional[int] = None,
 ) -> ImageDataset:
     """Create dataset from dataframe.
     Dataframe should have columns 'path' and 'synset' columns"""
