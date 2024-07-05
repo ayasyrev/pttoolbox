@@ -1,5 +1,4 @@
-"""Persistent Image Dataset.
-"""
+"""Persistent Image Dataset."""
 
 from typing import Callable, Optional
 

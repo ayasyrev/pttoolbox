@@ -1,4 +1,4 @@
-""" Image Dataset.
+"""Image Dataset.
 Samples as numpy memory mapped files.
 """
 
