@@ -97,7 +97,7 @@ def persistent_dataset_from_df(
     indexes: Optional[list[list[int]]] = None,
     transform_indexes: Optional[list[list[int]]] = None,
     epochs: Optional[int] = None,
-    num_samples: int = 0,
+    num_samples: Optional[int] = None,
     classes_as_imagenet: bool = False,
     transforms: Optional[Callable] = None,
     transform: Optional[Callable] = None,
