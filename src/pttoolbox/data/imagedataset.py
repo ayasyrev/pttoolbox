@@ -1,4 +1,4 @@
-""" Image Dataset.
+"""Image Dataset.
 As ImageFolderDataset -> base use from given samples.
 Use classes from imagenet, samples from dataframe.
 """
