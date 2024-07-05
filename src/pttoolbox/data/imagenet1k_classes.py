@@ -1,6 +1,5 @@
 from .imagenet1k_lemmas import LEMMAS
 
-
 TARGET2NAME = tuple(item[1] for item in LEMMAS)
 TARGET2DESCRIPTION = tuple(item[2] for item in LEMMAS)
 TARGET2SYNSET = tuple(item[0] for item in LEMMAS)

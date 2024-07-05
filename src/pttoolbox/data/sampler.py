@@ -1,4 +1,5 @@
 """Samplers/ First - persistent sampler."""
+
 from typing import Iterator, Optional
 
 from torch.utils.data import Sampler

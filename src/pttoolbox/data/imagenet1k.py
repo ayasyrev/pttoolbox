@@ -1,4 +1,5 @@
 """Create ImageDataset for Imagenet 1k."""
+
 from importlib import resources
 from typing import Literal, Optional
 
