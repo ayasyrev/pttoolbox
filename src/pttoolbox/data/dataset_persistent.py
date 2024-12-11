@@ -5,7 +5,7 @@ from typing import Callable, Optional
 import pandas as pd
 import torch
 
-from ..typing import PathOrStr
+from ..types import PathOrStr
 
 # from .get_files import get_files
 from .imagedataset import ImageDataset, samples_from_df

@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torchvision.datasets.vision import VisionDataset
 
-from ..typing import PathOrStr
+from ..types import PathOrStr
 
 
 class MemmapDataset(VisionDataset):
