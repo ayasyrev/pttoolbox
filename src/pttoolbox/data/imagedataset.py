@@ -11,7 +11,7 @@ import torch
 from torchvision.datasets.folder import default_loader
 from torchvision.datasets.vision import VisionDataset
 
-from ..typing import PathOrStr
+from ..types import PathOrStr
 from .get_files import get_files
 from .imagenet1k_classes import SYNSET2TARGET, synset2target
 from .transforms import ImageClassification

@@ -10,7 +10,7 @@ import pandas as pd
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader
 
-from ..typing import PathOrStr
+from ..types import PathOrStr
 from .dataset_memmap import MemmapDataset
 from .dataset_persistent import persistent_dataset_from_df
 from .dataset_safetensors import SafeTensorsDataset

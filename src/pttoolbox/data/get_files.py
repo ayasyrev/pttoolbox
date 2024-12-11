@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Optional
 
-from ..typing import PathOrStr
+from ..types import PathOrStr
 
 
 __all__ = ["get_files", "get_image_files"]
