@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-xml
+      - id: detect-private-key
+      - id: forbid-new-submodules
+      - id: forbid-submodules
+      - id: mixed-line-ending
+      - id: destroyed-symlinks
+      - id: fix-byte-order-marker
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-vcs-permalinks
+      - id: check-yaml
+        args: [--unsafe]
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: name-tests-test
+        args: [--pytest-test-first]
+      - id: trailing-whitespace
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: '0.26'
+    hooks:
+      - id: validate-pyproject
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.12.6
+    hooks:
+      - id: uv-lock
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
