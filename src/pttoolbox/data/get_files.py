@@ -1,8 +1,6 @@
 from pathlib import Path
-from typing import List, Optional
 
 from ..types import PathOrStr
-
 
 __all__ = ["get_files", "get_image_files"]
 
@@ -11,11 +9,11 @@ IMG_EXT = (".jpeg", ".jpg", ".jfif", ".pjpeg", ".pjp", ".png", ".bmp", ".tif", "
 
 def get_files(
     data_dir: PathOrStr,
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     sort: bool = True,
     images: bool = True,
-    ext: Optional[tuple[str]] = None,
-) -> List[Path]:
+    ext: tuple[str] | None = None,
+) -> list[Path]:
     """Return list of num_samples filenames from data_dir.
     If num_samples is None (default) return list of ALL images.
     Sorted by default, use sorted = False for unsorted list.
@@ -51,10 +49,10 @@ def get_files(
 
 def get_image_files(
     data_dir: PathOrStr,
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     sort: bool = True,
-    ext: Optional[tuple[str]] = None,
-) -> List[Path]:
+    ext: tuple[str] | None = None,
+) -> list[Path]:
     """Return list of num_samples image filenames from data_dir.s
 
     Args:

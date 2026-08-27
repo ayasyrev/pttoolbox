@@ -1,14 +1,14 @@
 """Create ImageDataset for Imagenet 1k."""
 
 from importlib import resources
-from typing import Literal, Optional
+from typing import Literal
 
 import pandas as pd
 
 
 def load_df(
-    filename: Optional[str] = None,
-    split: Optional[Literal["train", "val"]] = "val",
+    filename: str | None = None,
+    split: Literal["train", "val"] | None = "val",
 ) -> pd.DataFrame:
     """Load dataframe with information about dataset from parquet file.
 

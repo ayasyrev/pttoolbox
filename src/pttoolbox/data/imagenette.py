@@ -1,9 +1,10 @@
 """Create ImageDataset for Imagenette2 / Imagewoof2."""
 
 import os
+from collections.abc import Callable
 from importlib import resources
 from pathlib import Path
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -18,9 +19,9 @@ from .imagedataset import ImageDataset, df_add_path, imagedataset_from_df
 
 
 def load_df(
-    filename: Optional[str] = None,
-    dataset: Optional[Literal["imagenette2", "imagewoof2"]] = None,
-    split: Optional[Literal["train", "val"]] = None,
+    filename: str | None = None,
+    dataset: Literal["imagenette2", "imagewoof2"] | None = None,
+    split: Literal["train", "val"] | None = None,
 ) -> pd.DataFrame:
     """Load dataframe with information about dataset from parquet file.
 
@@ -44,10 +45,10 @@ def load_df(
 
 
 def get_imagenette_dataset(
-    root: Optional[PathOrStr] = None,
+    root: PathOrStr | None = None,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     classes_as_imagenet: bool = False,
     **kwargs,
 ) -> ImageDataset:
@@ -67,16 +68,15 @@ def get_imagenette_dataloader(
     root: PathOrStr,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     batch_size: int = 32,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    loader: Optional[Callable] = None,
-    sampler: Optional[Callable] = None,
-    # image_backend: str = "accimage",
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    loader: Callable | None = None,
+    sampler: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_workers: Optional[int] = None,
+    num_workers: int | None = None,
     **kwargs,
 ) -> DataLoader:
     """Create DataLoader for Imagenette2 / Imagewoof2."""
@@ -114,18 +114,18 @@ def get_persistent_imagenette_dataloader(
     root: PathOrStr,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     batch_size: int = 32,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    loader: Optional[Callable] = None,
-    sampler: Optional[Callable] = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    loader: Callable | None = None,
+    sampler: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_workers: Optional[int] = None,
-    indexes: Optional[list[list[int]]] = None,
-    transform_indexes: Optional[list[list[int]]] = None,
-    epochs: Optional[int] = None,
+    num_workers: int | None = None,
+    indexes: list[list[int]] | None = None,
+    transform_indexes: list[list[int]] | None = None,
+    epochs: int | None = None,
     **kwargs,
 ) -> DataLoader:
     """Create persistent DataLoader for Imagenette2 / Imagewoof2."""
@@ -158,10 +158,10 @@ def get_persistent_imagenette_dataloader(
 
 
 def get_imagenette_memmap_dataset(
-    root: Optional[PathOrStr] = None,
+    root: PathOrStr | None = None,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     classes_as_imagenet: bool = False,
     **kwargs,
 ) -> ImageDataset:
@@ -203,14 +203,14 @@ def get_imagenette_memmap_dataloader(
     root: PathOrStr,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     batch_size: int = 32,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    sampler: Optional[Callable] = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    sampler: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_workers: Optional[int] = None,
+    num_workers: int | None = None,
     **kwargs,
 ) -> DataLoader:
     """Create memory mapped DataLoader for Imagenette2 / Imagewoof2."""
@@ -244,10 +244,10 @@ def get_imagenette_memmap_dataloader(
 
 
 def get_imagenette_safetensor_dataset(
-    root: Optional[PathOrStr] = None,
+    root: PathOrStr | None = None,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     classes_as_imagenet: bool = False,
     **kwargs,
 ) -> ImageDataset:
@@ -271,14 +271,14 @@ def get_imagenette_safetensor_dataloader(
     root: PathOrStr,
     dataset: Literal["imagenette2", "imagewoof2"] = "imagenette2",
     split: Literal["train", "val"] = "train",
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     batch_size: int = 32,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    sampler: Optional[Callable] = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    sampler: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_workers: Optional[int] = None,
+    num_workers: int | None = None,
     **kwargs,
 ) -> DataLoader:
     """Create safetensors DataLoader for Imagenette2 / Imagewoof2."""

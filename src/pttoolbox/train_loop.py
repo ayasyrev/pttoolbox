@@ -2,10 +2,11 @@
 
 import os
 import shutil
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Literal, Optional, TypedDict, Union
+from typing import Any, Literal, TypedDict
 
 import torch
 import yaml
@@ -22,7 +23,7 @@ class Cfg:
     exp_name: str = ""
     ds: str = ""
     model_name: str = ""
-    model_weights: Optional[str] = None
+    model_weights: str | None = None
     epochs: int = 5
     lr: float = 0.001
     opt_func: type[torch.optim.Optimizer] = torch.optim.AdamW
@@ -31,7 +32,7 @@ class Cfg:
     loss_func_cfg: dict[str, Any] = field(default_factory=lambda: {"reduction": "none"})
     batch_transform: str = "normalize"
     batch_size: int = 32
-    log_path: Union[str, Path] = "."
+    log_path: str | Path = "."
     num_last: int = 10
 
 
@@ -57,7 +58,7 @@ class Metrics(TypedDict):
     dl_validate_len: int
 
 
-def initiate_metrics(cfg: Optional[Cfg] = None, device=None) -> Metrics:
+def initiate_metrics(cfg: Cfg | None = None, device=None) -> Metrics:
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_last = 10 if cfg is None else cfg.num_last
@@ -137,8 +138,8 @@ def train_loop(
     model: torch.nn.Module,
     dl_train: torch.utils.data.DataLoader,
     dl_validate: torch.utils.data.DataLoader,
-    batch_transform: Optional[Callable] = None,
-    metrics: Optional[Metrics] = None,
+    batch_transform: Callable | None = None,
+    metrics: Metrics | None = None,
 ) -> Metrics:
     """Train loop."""
     opt = cfg.opt_func(model.parameters(), lr=cfg.lr, **cfg.opt_cfg)

@@ -1,6 +1,6 @@
 """Persistent Image Dataset."""
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import pandas as pd
 import torch
@@ -15,23 +15,21 @@ from .transforms import TrainPersistentTransform
 class DatasetPersistent(ImageDataset):
     """Image Dataset from samples, persistent."""
 
-    transform_args: Optional[list[tuple[str, ...]]] = None
+    transform_args: list[tuple[str, ...]] | None = None
 
     def __init__(
         self,
         root: PathOrStr,
         samples: tuple[tuple[str, int], ...],
-        indexes: Optional[list[list[int]]] = None,
-        transform_indexes: Optional[list[list[int]]] = None,
-        epochs: Optional[int] = None,
-        classes: Optional[tuple[str, ...]] = None,
-        class_to_idx: Optional[dict[str, int]] = None,
-        transforms: Optional[Callable] = None,
-        transform: Optional[
-            Callable[[torch.Tensor, int, int, int], torch.Tensor]
-        ] = None,
-        target_transform: Optional[Callable] = None,
-        loader: Optional[Callable] = None,
+        indexes: list[list[int]] | None = None,
+        transform_indexes: list[list[int]] | None = None,
+        epochs: int | None = None,
+        classes: tuple[str, ...] | None = None,
+        class_to_idx: dict[str, int] | None = None,
+        transforms: Callable | None = None,
+        transform: Callable[[torch.Tensor, int, int, int], torch.Tensor] | None = None,
+        target_transform: Callable | None = None,
+        loader: Callable | None = None,
         classes_as_imagenet: bool = False,
     ):
         """Dataset with persistent sampler."""
@@ -94,15 +92,15 @@ class DatasetPersistent(ImageDataset):
 def persistent_dataset_from_df(
     root: PathOrStr,
     df: pd.DataFrame,
-    indexes: Optional[list[list[int]]] = None,
-    transform_indexes: Optional[list[list[int]]] = None,
-    epochs: Optional[int] = None,
-    num_samples: Optional[int] = None,
+    indexes: list[list[int]] | None = None,
+    transform_indexes: list[list[int]] | None = None,
+    epochs: int | None = None,
+    num_samples: int | None = None,
     classes_as_imagenet: bool = False,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    loader: Optional[Callable] = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    loader: Callable | None = None,
 ) -> "DatasetPersistent":
     samples, class_to_idx = samples_from_df(
         df, num_samples=num_samples, classes_as_imagenet=classes_as_imagenet

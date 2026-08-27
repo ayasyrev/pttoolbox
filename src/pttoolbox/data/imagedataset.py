@@ -3,8 +3,8 @@ As ImageFolderDataset -> base use from given samples.
 Use classes from imagenet, samples from dataframe.
 """
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, Union
 
 import pandas as pd
 import torch
@@ -20,20 +20,20 @@ from .transforms import ImageClassification
 class ImageDataset(VisionDataset):
     """Image Dataset from samples"""
 
-    classes: Optional[tuple[str, ...]]  # as torchvision Datasets examples
-    class_to_idx: Optional[dict[str, int]]  # as torchvision Datasets examples
+    classes: tuple[str, ...] | None  # as torchvision Datasets examples
+    class_to_idx: dict[str, int] | None  # as torchvision Datasets examples
 
     def __init__(
         self,
         *,
-        root: Optional[PathOrStr] = None,  # only for compatibility
+        root: PathOrStr | None = None,  # only for compatibility
         samples: tuple[tuple[str, int], ...],
-        classes: Optional[tuple[str, ...]] = None,
-        class_to_idx: Optional[dict[str, int]] = None,
-        transforms: Optional[Callable] = None,
-        transform: Optional[Callable] = None,
-        target_transform: Optional[Callable] = None,
-        loader: Optional[Callable] = None,
+        classes: tuple[str, ...] | None = None,
+        class_to_idx: dict[str, int] | None = None,
+        transforms: Callable | None = None,
+        transform: Callable | None = None,
+        target_transform: Callable | None = None,
+        loader: Callable | None = None,
     ):
         """Image Dataset from samples - samples as tuple - filename and target"""
         super().__init__(
@@ -56,7 +56,7 @@ class ImageDataset(VisionDataset):
     def __len__(self) -> int:
         return self._num_samples
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, Union[int, torch.Tensor]]:
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, int | torch.Tensor]:
         return (
             self.transform(self.loader(self.samples[index][0])),
             self.target_transform(self.samples[index][1]),
@@ -66,12 +66,12 @@ class ImageDataset(VisionDataset):
 def imagedataset_from_folder(
     root: PathOrStr,
     *,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    loader: Optional[Callable] = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    loader: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
 ) -> ImageDataset:
     """Create dataset from folder structure. Folders as classes."""
     filenames = get_files(root, num_samples=num_samples)
@@ -96,14 +96,13 @@ def imagedataset_from_folder(
 def imagedataset_from_df(
     df: pd.DataFrame,
     *,
-    root: Optional[PathOrStr] = None,
-    transforms: Optional[Callable] = None,
-    transform: Optional[Callable] = None,
-    target_transform: Optional[Callable] = None,
-    loader: Optional[Callable] = None,
-    # image_backend: str = "accimage",
+    root: PathOrStr | None = None,
+    transforms: Callable | None = None,
+    transform: Callable | None = None,
+    target_transform: Callable | None = None,
+    loader: Callable | None = None,
     classes_as_imagenet: bool = False,
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
 ) -> ImageDataset:
     """Create dataset from dataframe.
     Dataframe should have columns 'path' and 'synset' columns"""
@@ -130,7 +129,7 @@ def df_add_path(df: pd.DataFrame, root: PathOrStr) -> pd.DataFrame:
 
 def samples_from_df(
     df: pd.DataFrame,
-    num_samples: Optional[int] = None,
+    num_samples: int | None = None,
     classes_as_imagenet: bool = False,
 ) -> tuple[tuple[tuple[str, int], ...], dict[str, int]]:
     """Generate samples and class_to_idx from dataframe.

@@ -1,7 +1,7 @@
 # copied from torchvision and refactored
-import accimage
 from PIL import Image
-from torchvision.io import ImageReadMode, read_image
+from torch import Tensor
+from torchvision.io import ImageReadMode, decode_image
 
 
 def pil_loader(path: str) -> Image.Image:
@@ -11,18 +11,5 @@ def pil_loader(path: str) -> Image.Image:
         return img.convert("RGB")
 
 
-def accimage_loader_safe(path: str) -> accimage.Image:
-    try:
-        return accimage.Image(path)
-    except OSError:
-        # Potentially a decoding problem, fall back to PIL.Image
-        return pil_loader(path)
-
-
-# @lru_cache(maxsize=None)
-def accimage_loader(path: str) -> accimage.Image:
-    return accimage.Image(path)
-
-
-def io_loader(path: str):
-    return read_image(path, mode=ImageReadMode.RGB)
+def io_loader(path: str) -> Tensor:
+    return decode_image(path, mode=ImageReadMode.RGB)

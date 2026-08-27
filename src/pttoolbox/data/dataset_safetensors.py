@@ -2,7 +2,7 @@
 Samples as numpy memory mapped files.
 """
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import torch
 from torch import Tensor
@@ -14,20 +14,20 @@ from ..types import PathOrStr
 class SafeTensorsDataset(VisionDataset):
     """Image Dataset from samples"""
 
-    classes: Optional[tuple[str, ...]]  # as torchvision Datasets examples
-    class_to_idx: Optional[dict[str, int]]  # as torchvision Datasets examples
+    classes: tuple[str, ...] | None  # as torchvision Datasets examples
+    class_to_idx: dict[str, int] | None  # as torchvision Datasets examples
 
     def __init__(
         self,
         *,
-        root: Optional[PathOrStr] = None,  # only for compatibility
+        root: PathOrStr | None = None,  # only for compatibility
         samples: Tensor,
         targets: Tensor,
-        classes: Optional[tuple[str, ...]] = None,
-        class_to_idx: Optional[dict[str, int]] = None,
-        transforms: Optional[Callable] = None,
-        transform: Optional[Callable] = None,
-        target_transform: Optional[Callable] = None,
+        classes: tuple[str, ...] | None = None,
+        class_to_idx: dict[str, int] | None = None,
+        transforms: Callable | None = None,
+        transform: Callable | None = None,
+        target_transform: Callable | None = None,
     ):
         """Image Dataset from samples - samples as tuple - filename and target"""
         super().__init__(

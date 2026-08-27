@@ -1,6 +1,6 @@
 """Samplers/ First - persistent sampler."""
 
-from typing import Iterator, Optional
+from collections.abc import Iterator
 
 from torch.utils.data import Sampler
 
@@ -9,7 +9,7 @@ class PersistentSampler(Sampler[int]):
     def __init__(
         self,
         indexes: list[list[int]],
-        epochs: Optional[int] = None,
+        epochs: int | None = None,
     ) -> None:
         self.indexes = indexes
         self.epochs = epochs or len(indexes)

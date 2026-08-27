@@ -1,5 +1,3 @@
-from typing import Optional, Tuple, Union
-
 import torch
 from torch import Tensor, nn
 from torchvision.transforms import InterpolationMode
@@ -14,10 +12,10 @@ class ImageClassification(nn.Module):
         *,
         crop_size: int,
         resize_size: int = 256,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         """Basic transforms, copied and adapted from torchvision.transforms._presets"""
         super().__init__()
@@ -67,10 +65,10 @@ class ImageClassificationV2(nn.Module):
         *,
         crop_size: int,
         resize_size: int = 256,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         """Basic V2 transforms, copied and adapted from torchvision.transforms._presets"""
         super().__init__()
@@ -121,7 +119,7 @@ class ImageClassificationNoNorm(nn.Module):
         crop_size: int,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -165,7 +163,7 @@ class ImageClassificationNoNormV2(nn.Module):
         crop_size: int,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -207,8 +205,8 @@ class Normalize(nn.Module):
     def __init__(
         self,
         *,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
     ) -> None:
         super().__init__()
         self.mean = mean
@@ -230,8 +228,8 @@ class NormalizeV2(nn.Module):
     def __init__(
         self,
         *,
-        mean: Tuple[float, ...] = (0.485, 0.456, 0.406),
-        std: Tuple[float, ...] = (0.229, 0.224, 0.225),
+        mean: tuple[float, ...] = (0.485, 0.456, 0.406),
+        std: tuple[float, ...] = (0.229, 0.224, 0.225),
     ) -> None:
         super().__init__()
         self.mean = mean
@@ -256,7 +254,7 @@ class TrainPersistentTransform(nn.Module):
         crop_size: int = 224,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -303,7 +301,7 @@ class TrainPersistentTransformV2(nn.Module):
         crop_size: int = 224,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -350,7 +348,7 @@ class ResizeCenterCropV2(nn.Module):
         crop_size: int,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -376,7 +374,7 @@ class TrainPersistentTrfmV2(nn.Module):
         crop_size: int = 224,
         resize_size: int = 256,
         interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-        antialias: Optional[Union[str, bool]] = True,
+        antialias: str | bool | None = True,
     ) -> None:
         super().__init__()
         self.crop_size = (crop_size,)
@@ -408,8 +406,8 @@ class ConvertNormalizeV2(nn.Module):
     def __init__(
         self,
         *,
-        mean: Tuple[float, ...] = (123.6750, 116.2800, 103.5300),
-        std: Tuple[float, ...] = (58.3950, 57.1200, 57.3750),
+        mean: tuple[float, ...] = (123.6750, 116.2800, 103.5300),
+        std: tuple[float, ...] = (58.3950, 57.1200, 57.3750),
     ) -> None:
         super().__init__()
         self.mean = mean
@@ -432,8 +430,8 @@ class ConvertNormV2(nn.Module):
     def __init__(
         self,
         *,
-        mean: Tuple[float, ...] = (123.6750, 116.2800, 103.5300),
-        std: Tuple[float, ...] = (58.3950, 57.1200, 57.3750),
+        mean: tuple[float, ...] = (123.6750, 116.2800, 103.5300),
+        std: tuple[float, ...] = (58.3950, 57.1200, 57.3750),
         device: str = "cpu",
     ) -> None:
         super().__init__()
