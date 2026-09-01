@@ -1,5 +1,7 @@
 """Create ImageDataset for Imagenette2 / Imagewoof2."""
 
+import hashlib
+import hmac
 import os
 from collections.abc import Callable
 from importlib import resources
@@ -8,6 +10,15 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
+import requests
+from rich.progress import (
+    BarColumn,
+    DownloadColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TransferSpeedColumn,
+)
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader
 
@@ -16,6 +27,93 @@ from .dataset_memmap import MemmapDataset
 from .dataset_persistent import persistent_dataset_from_df
 from .dataset_safetensors import SafeTensorsDataset
 from .imagedataset import ImageDataset, df_add_path, imagedataset_from_df
+
+IMAGENETTE_ARCHIVE_FILENAME = "imagenette2.tgz"
+IMAGENETTE_ARCHIVE_URL = "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"
+IMAGENETTE_ARCHIVE_SHA256 = (
+    "6cbfac238434d89fe99e651496f0812ebc7a10fa62bd42d6874042bf01de4efd"
+)
+_DOWNLOAD_CHUNK_SIZE = 1024 * 1024
+
+
+def verify_imagenette_archive(
+    archive_path: PathOrStr,
+    *,
+    expected_sha256: str = IMAGENETTE_ARCHIVE_SHA256,
+) -> bool:
+    """Return whether an Imagenette archive matches the expected SHA-256."""
+    path = Path(archive_path)
+    if not path.is_file():
+        return False
+
+    digest = hashlib.sha256()
+    with path.open("rb") as archive:
+        for chunk in iter(lambda: archive.read(_DOWNLOAD_CHUNK_SIZE), b""):
+            digest.update(chunk)
+    return hmac.compare_digest(digest.hexdigest(), expected_sha256.lower())
+
+
+def download_imagenette_archive(
+    root: PathOrStr,
+    *,
+    timeout: float = 30.0,
+) -> Path:
+    """Download and verify the full Imagenette archive without extracting it."""
+    root_path = Path(root)
+    archive_path = root_path / IMAGENETTE_ARCHIVE_FILENAME
+    if verify_imagenette_archive(
+        archive_path,
+        expected_sha256=IMAGENETTE_ARCHIVE_SHA256,
+    ):
+        return archive_path
+
+    root_path.mkdir(parents=True, exist_ok=True)
+    partial_path = archive_path.with_name(f"{archive_path.name}.part")
+    digest = hashlib.sha256()
+
+    try:
+        with requests.get(
+            IMAGENETTE_ARCHIVE_URL,
+            stream=True,
+            timeout=timeout,
+        ) as response:
+            response.raise_for_status()
+            content_length = response.headers.get("content-length")
+            total_size = int(content_length) if content_length else None
+
+            with (
+                Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    BarColumn(),
+                    DownloadColumn(),
+                    TransferSpeedColumn(),
+                ) as progress,
+                partial_path.open("wb") as archive,
+            ):
+                task = progress.add_task(
+                    f"Downloading {IMAGENETTE_ARCHIVE_FILENAME}...",
+                    total=total_size,
+                )
+                for chunk in response.iter_content(chunk_size=_DOWNLOAD_CHUNK_SIZE):
+                    if not chunk:
+                        continue
+                    archive.write(chunk)
+                    digest.update(chunk)
+                    progress.update(task, advance=len(chunk))
+
+        actual_sha256 = digest.hexdigest()
+        if not hmac.compare_digest(actual_sha256, IMAGENETTE_ARCHIVE_SHA256):
+            raise ValueError(
+                "Imagenette archive SHA-256 mismatch: "
+                f"expected {IMAGENETTE_ARCHIVE_SHA256}, got {actual_sha256}"
+            )
+        partial_path.replace(archive_path)
+    except BaseException:
+        partial_path.unlink(missing_ok=True)
+        raise
+
+    return archive_path
 
 
 def load_df(
